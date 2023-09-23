@@ -4,7 +4,7 @@
  * @Email: uyplayer@qq.com
  * @File: mod
  * @Software: CLion
- * @Dir: proxy_simulator / src/runner
+ * @Dir: proxy_simulator / src/selector
  * @Project_Name: proxy_simulator
  * @Description:
  */

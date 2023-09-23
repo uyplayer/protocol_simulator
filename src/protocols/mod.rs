@@ -8,3 +8,9 @@
  * @Project_Name: proxy_simulator
  * @Description:
  */
+
+pub mod http;
+pub mod https;
+pub mod socks5;
+pub mod trojan;
+pub mod udp;

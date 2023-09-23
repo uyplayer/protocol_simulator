@@ -2,7 +2,7 @@ use log::{error, info};
 
 #[cfg(target_os = "windows")]
 pub fn set_daemon(name: &str) {
-    log::warn!("can't be daemonized on windows yet!");
+    log::warn!("can't be daemonize on windows platform yet !");
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -25,7 +25,7 @@ pub fn set_daemon(name: &str) {
         .privileged_action(|| "Executed before drop privileges");
 
     match daemonize.start() {
-        Ok(_) => info!("Success, daemonized"),
+        Ok(_) => info!("Success, daemonize"),
         Err(e) => error!("Error, {}", e),
     }
 }

@@ -11,20 +11,17 @@
 
 
 
-use std::future::pending;
+use std::collections::HashMap;
+use std::fmt::{Display};
 use tokio::net::{TcpStream};
-use std::io::{Read, Write};
-use std::net::Shutdown;
-use std::ops::Deref;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tokio::io::AsyncReadExt;
+
+
 
 ///
 ///
 ///        supporting protocols list
 /// =========================================
-///          http / https / socks5
+///          http / https / socks5 / trojan
 /// =========================================
 ///
 ///
@@ -33,6 +30,8 @@ pub enum ProtocolsList {
     HTTP,
     HTTPS,
     SOCKS5,
+    TROJAN,
+    UDP
 }
 
 
@@ -40,7 +39,7 @@ pub enum ProtocolsList {
 /// save protocal information
 ///
 #[derive(Debug,Clone)]
-pub struct Protocol{
+pub struct PackageProtocol {
     pub protocal_type:Option<ProtocolsList>,
     pub destination_host:Option<String>,
     pub destination_port : Option<String>,
@@ -49,11 +48,9 @@ pub struct Protocol{
 }
 
 
-
-
-pub async fn extract_protocol_info(mut stream: &TcpStream) ->Protocol
+pub async fn extract_protocol_info(stream: &TcpStream, config: HashMap<&str, String>) ->PackageProtocol
 {
-    let mut protocal = Protocol {
+    let mut protocal = PackageProtocol {
         protocal_type: None,
         destination_host: None,
         destination_port: None,
@@ -62,10 +59,10 @@ pub async fn extract_protocol_info(mut stream: &TcpStream) ->Protocol
     };
     let mut buffer = [0; 1024];
     let len = stream.peek(&mut buffer).await.expect("peek failed");
-    let request_str = String::from_utf8_lossy(&buffer[..len]);
+    let mut buffer = &buffer[..len];
+    let request_str = String::from_utf8_lossy(&buffer);
     // http https
-    if request_str.contains("HTTP") && !request_str.is_empty() {
-
+    if request_str.contains("HTTP") && !request_str.is_empty(){
         let host_line = request_str.lines().find(|line| line.contains("Host:"));
         let Some(line) = host_line else {unimplemented!()};
         let split:Vec<_> = line.split(":").collect();
@@ -77,9 +74,20 @@ pub async fn extract_protocol_info(mut stream: &TcpStream) ->Protocol
         let source:Vec<_> = stream.peer_addr().unwrap().to_string().split(":").map(|x|{
             x.to_string()
         }).collect();
+
         match request_str.contains("CONNECT") {
             true => {
-                protocal.protocal_type = Some(ProtocolsList::HTTPS);
+                if config["protocol_type"] == "socks5" {
+                    protocal.protocal_type = Some(ProtocolsList::SOCKS5);
+                } else if config["protocol_type"] == "trojan" {
+                    protocal.protocal_type = Some(ProtocolsList::TROJAN);
+                } else if config["protocol_type"] == "udp" {
+                    protocal.protocal_type = Some(ProtocolsList::UDP);
+                }
+                else {
+                    protocal.protocal_type = Some(ProtocolsList::HTTPS);
+                }
+
             }
             _ => {
                 protocal.protocal_type = Some(ProtocolsList::HTTP);
@@ -89,6 +97,7 @@ pub async fn extract_protocol_info(mut stream: &TcpStream) ->Protocol
         protocal.destination_port = port;
         protocal.source_ip =Some(source[0].to_string());
         protocal.source_port =Some(source[1].to_string());
+
 
     }
     protocal

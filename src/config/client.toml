@@ -1,0 +1,29 @@
+# cleint name
+name = "client"
+# protocal mode to select spicipic mode
+# todo: auto mode is atuomaticly select protocal for each package bases on package data
+# http and https are same mode
+# socks5 mode only
+# trajon mode only
+protocol_type = "udp"
+
+[local]
+# local proxy client adress and port
+local_addr = "127.0.0.1"
+local_port = "80"
+
+[remote]
+# local proxy server adress and port
+remote_addr = "localhost"
+remote_port = "4330"
+
+[trojan]
+# if trojan protocol, pasword must be set
+password="123456789"
+
+
+
+[daemon_linux]
+# daemonize on linux platform
+daemon = false
+
